@@ -1,0 +1,1293 @@
+<?php
+
+require_once __DIR__ . "/../includes/analytics_data.php";
+
+$monthlyData = [];
+$categoryData = [];
+$paymentData = [];
+$topProductsData = [];
+$cityData = [];
+$revenueCostProfitData = [];
+
+$analyticsError = null;
+
+try {
+
+    $monthlyData = getMonthlySalesData("supermarket_star");
+
+    $categoryData = getCategoryRevenueData("supermarket_star");
+
+    $paymentData = getPaymentMethodData("supermarket_star");
+
+    $topProductsData = getTopSellingProductsData("supermarket_star");
+
+    $cityData = getCityWiseSalesData("supermarket_star");
+
+    $revenueCostProfitData = getRevenueCostProfitData("supermarket_star");
+
+} catch (Throwable $e) {
+
+    $analyticsError = $e->getMessage();
+
+}
+
+
+// =====================================
+// MONTHLY CHART DATA
+// =====================================
+
+$monthLabels = [];
+$revenueData = [];
+$profitData = [];
+
+foreach ($monthlyData as $row) {
+
+    $monthLabels[] = $row["month_name"] . " " . $row["year_number"];
+
+    $revenueData[] = (float) $row["total_revenue"];
+
+    $profitData[] = (float) $row["total_profit"];
+
+}
+
+
+// =====================================
+// CATEGORY CHART DATA
+// =====================================
+
+$categoryLabels = [];
+$categoryRevenue = [];
+
+foreach ($categoryData as $row) {
+
+    $categoryLabels[] = $row["category"];
+
+    $categoryRevenue[] = (float) $row["total_revenue"];
+
+}
+
+
+// =====================================
+// PAYMENT CHART DATA
+// =====================================
+
+$paymentLabels = [];
+$paymentRevenue = [];
+$paymentTransactions = [];
+
+foreach ($paymentData as $row) {
+
+    $paymentLabels[] = $row["payment_method"];
+
+    $paymentRevenue[] = (float) $row["total_revenue"];
+
+    $paymentTransactions[] = (int) $row["total_transactions"];
+
+}
+
+$totalPaymentRevenue = array_sum($paymentRevenue);
+
+
+// =====================================
+// TOP PRODUCTS CHART DATA
+// =====================================
+
+$productLabels = [];
+$productRevenue = [];
+$productQuantity = [];
+$productProfit = [];
+
+foreach ($topProductsData as $row) {
+
+    $productLabels[] = $row["product_name"];
+
+    $productRevenue[] = (float) $row["total_revenue"];
+
+    $productQuantity[] = (float) $row["total_quantity_sold"];
+
+    $productProfit[] = (float) $row["total_profit"];
+
+}
+
+
+// =====================================
+// CITY-WISE SALES CHART DATA
+// =====================================
+
+$cityLabels = [];
+$cityRevenue = [];
+$cityQuantity = [];
+$cityProfit = [];
+
+foreach ($cityData as $row) {
+
+    $cityLabels[] = $row["city"];
+
+    $cityRevenue[] = (float) $row["total_revenue"];
+
+    $cityQuantity[] = (float) $row["total_quantity_sold"];
+
+    $cityProfit[] = (float) $row["total_profit"];
+
+}
+
+
+// =====================================
+// REVENUE VS COST VS PROFIT DATA
+// =====================================
+
+$financialMonthLabels = [];
+$financialRevenue = [];
+$financialCost = [];
+$financialProfit = [];
+
+foreach ($revenueCostProfitData as $row) {
+
+    $financialMonthLabels[] = $row["month_name"] . " " . $row["year_number"];
+
+    $financialRevenue[] = (float) $row["total_revenue"];
+
+    $financialCost[] = (float) $row["total_cost"];
+
+    $financialProfit[] = (float) $row["total_profit"];
+
+}
+
+?>
+
+<!-- SALES ANALYTICS PAGE -->
+
+<section class="page-intro">
+
+    <div>
+
+        <h2>Sales Analytics</h2>
+
+        <p>
+            Explore supermarket sales trends and business performance.
+        </p>
+
+    </div>
+
+    <div class="analytics-badge">
+        Analytics Workspace
+    </div>
+
+</section>
+
+
+<!-- SALES PERFORMANCE ANALYSIS -->
+
+<section class="dashboard-section">
+
+    <div class="section-title">
+        Sales Performance Analysis
+    </div>
+
+    <p class="section-description">
+
+        Analyze revenue, profit, product sales and customer behavior
+        using the supermarket data warehouse.
+
+    </p>
+
+
+    <?php if ($analyticsError !== null): ?>
+
+        <div class="error-message">
+
+            Unable to load analytics data:
+
+            <?= htmlspecialchars($analyticsError) ?>
+
+        </div>
+
+    <?php else: ?>
+
+
+        <div class="analytics-grid">
+
+
+            <!-- MONTHLY REVENUE AND PROFIT -->
+
+            <div class="analytics-card">
+
+                <h3>Monthly Revenue & Profit</h3>
+
+                <p>Monthly revenue and profit comparison.</p>
+
+                <?php if (empty($monthlyData)): ?>
+
+                    <div class="analytics-placeholder">
+                        No monthly sales data available.
+                    </div>
+
+                <?php else: ?>
+
+                    <div style="position: relative; width: 100%; height: 320px;">
+
+                        <canvas id="monthlySalesChart"></canvas>
+
+                    </div>
+
+                <?php endif; ?>
+
+            </div>
+
+
+            <!-- CATEGORY-WISE REVENUE -->
+
+            <div class="analytics-card">
+
+                <h3>Category-wise Revenue</h3>
+
+                <p>Compare revenue generated by each product category.</p>
+
+                <?php if (empty($categoryData)): ?>
+
+                    <div class="analytics-placeholder">
+                        No category data available.
+                    </div>
+
+                <?php else: ?>
+
+                    <div style="position: relative; width: 100%; height: 320px;">
+
+                        <canvas id="categoryRevenueChart"></canvas>
+
+                    </div>
+
+                <?php endif; ?>
+
+            </div>
+
+
+            <!-- PAYMENT METHOD ANALYSIS -->
+
+            <div class="analytics-card">
+
+                <h3>Payment Method Analysis</h3>
+
+                <p>
+                    Analyze revenue distribution across payment methods.
+                </p>
+
+                <?php if (empty($paymentData)): ?>
+
+                    <div class="analytics-placeholder">
+                        No payment data available.
+                    </div>
+
+                <?php else: ?>
+
+                    <div style="position: relative; width: 100%; height: 320px;">
+
+                        <canvas id="paymentMethodChart"></canvas>
+
+                    </div>
+
+                <?php endif; ?>
+
+
+                <div style="margin-top: 15px; text-align: center;">
+
+                    <strong>
+
+                        Total Payment Revenue:
+
+                        ৳<?= number_format($totalPaymentRevenue, 2) ?>
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    <?php endif; ?>
+
+</section>
+
+
+<!-- ADVANCED ANALYTICS -->
+
+<section class="dashboard-section">
+
+    <div class="section-title">
+        Advanced Analytics
+    </div>
+
+
+    <div class="analytics-grid">
+
+
+        <!-- TOP SELLING PRODUCTS -->
+
+        <div class="analytics-card">
+
+            <h3>Top 5 Selling Products</h3>
+
+            <p>
+                Identify the products generating the highest sales revenue.
+            </p>
+
+
+            <?php if ($analyticsError !== null): ?>
+
+                <div class="analytics-placeholder">
+                    Unable to load product data.
+                </div>
+
+            <?php elseif (empty($topProductsData)): ?>
+
+                <div class="analytics-placeholder">
+                    No product data available.
+                </div>
+
+            <?php else: ?>
+
+                <div style="position: relative; width: 100%; height: 350px;">
+
+                    <canvas id="topProductsChart"></canvas>
+
+                </div>
+
+            <?php endif; ?>
+
+        </div>
+
+
+        <!-- CITY-WISE SALES -->
+
+        <div class="analytics-card">
+
+            <h3>City-wise Sales</h3>
+
+            <p>
+                Compare revenue generated across different cities.
+            </p>
+
+
+            <?php if ($analyticsError !== null): ?>
+
+                <div class="analytics-placeholder">
+                    Unable to load city data.
+                </div>
+
+            <?php elseif (empty($cityData)): ?>
+
+                <div class="analytics-placeholder">
+                    No city sales data available.
+                </div>
+
+            <?php else: ?>
+
+                <div style="position: relative; width: 100%; height: 350px;">
+
+                    <canvas id="citySalesChart"></canvas>
+
+                </div>
+
+            <?php endif; ?>
+
+        </div>
+
+
+        <!-- REVENUE VS COST VS PROFIT -->
+
+        <div class="analytics-card">
+
+            <h3>Revenue vs Cost vs Profit</h3>
+
+            <p>
+                Compare monthly revenue, business cost and profit.
+            </p>
+
+
+            <?php if ($analyticsError !== null): ?>
+
+                <div class="analytics-placeholder">
+                    Unable to load financial data.
+                </div>
+
+            <?php elseif (empty($revenueCostProfitData)): ?>
+
+                <div class="analytics-placeholder">
+                    No financial data available.
+                </div>
+
+            <?php else: ?>
+
+                <div style="position: relative; width: 100%; height: 350px;">
+
+                    <canvas id="revenueCostProfitChart"></canvas>
+
+                </div>
+
+            <?php endif; ?>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<!-- CHART.JS INTEGRATION -->
+
+<?php if ($analyticsError === null): ?>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+
+    // =====================================
+    // MONTHLY REVENUE AND PROFIT CHART
+    // =====================================
+
+    const monthlyCanvas = document.getElementById("monthlySalesChart");
+
+    if (monthlyCanvas) {
+
+        const monthLabels = <?= json_encode(
+            $monthLabels,
+            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+        ) ?>;
+
+        const revenueData = <?= json_encode($revenueData) ?>;
+
+        const profitData = <?= json_encode($profitData) ?>;
+
+
+        new Chart(monthlyCanvas, {
+
+            type: "line",
+
+            data: {
+
+                labels: monthLabels,
+
+                datasets: [
+
+                    {
+                        label: "Revenue",
+                        data: revenueData,
+                        borderColor: "#2563eb",
+                        backgroundColor: "rgba(37, 99, 235, 0.12)",
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.35,
+                        fill: true
+                    },
+
+                    {
+                        label: "Profit",
+                        data: profitData,
+                        borderColor: "#16a34a",
+                        backgroundColor: "rgba(22, 163, 74, 0.10)",
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.35,
+                        fill: true
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+                maintainAspectRatio: false,
+
+                interaction: {
+                    mode: "index",
+                    intersect: false
+                },
+
+                plugins: {
+
+                    legend: {
+                        display: true,
+                        position: "top"
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function (context) {
+
+                                return context.dataset.label + ": ৳" +
+
+                                    Number(context.parsed.y).toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+
+                            }
+
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        title: {
+                            display: true,
+                            text: "Amount (BDT)"
+                        },
+
+                        ticks: {
+
+                            callback: function (value) {
+
+                                return "৳" + Number(value).toLocaleString("en-US");
+
+                            }
+
+                        }
+
+                    },
+
+                    x: {
+
+                        title: {
+                            display: true,
+                            text: "Month"
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    // =====================================
+    // CATEGORY-WISE REVENUE BAR CHART
+    // =====================================
+
+    const categoryCanvas = document.getElementById("categoryRevenueChart");
+
+    if (categoryCanvas) {
+
+        const categoryLabels = <?= json_encode(
+            $categoryLabels,
+            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+        ) ?>;
+
+        const categoryRevenue = <?= json_encode($categoryRevenue) ?>;
+
+
+        new Chart(categoryCanvas, {
+
+            type: "bar",
+
+            data: {
+
+                labels: categoryLabels,
+
+                datasets: [
+
+                    {
+                        label: "Revenue",
+                        data: categoryRevenue,
+
+                        backgroundColor: [
+                            "#2563eb",
+                            "#16a34a",
+                            "#f59e0b",
+                            "#8b5cf6"
+                        ],
+
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function (context) {
+
+                                return "Revenue: ৳" +
+
+                                    Number(context.parsed.y).toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+
+                            }
+
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        title: {
+                            display: true,
+                            text: "Revenue (BDT)"
+                        },
+
+                        ticks: {
+
+                            callback: function (value) {
+
+                                return "৳" + Number(value).toLocaleString("en-US");
+
+                            }
+
+                        }
+
+                    },
+
+                    x: {
+
+                        title: {
+                            display: true,
+                            text: "Product Category"
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    // =====================================
+    // PAYMENT METHOD DOUGHNUT CHART
+    // =====================================
+
+    const paymentCanvas = document.getElementById("paymentMethodChart");
+
+    if (paymentCanvas) {
+
+        const paymentLabels = <?= json_encode(
+            $paymentLabels,
+            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+        ) ?>;
+
+        const paymentRevenue = <?= json_encode($paymentRevenue) ?>;
+
+        const paymentTransactions = <?= json_encode($paymentTransactions) ?>;
+
+        const totalRevenue = <?= json_encode($totalPaymentRevenue) ?>;
+
+
+        new Chart(paymentCanvas, {
+
+            type: "doughnut",
+
+            data: {
+
+                labels: paymentLabels,
+
+                datasets: [
+
+                    {
+
+                        label: "Revenue",
+                        data: paymentRevenue,
+
+                        backgroundColor: [
+                            "#2563eb",
+                            "#16a34a",
+                            "#f59e0b",
+                            "#8b5cf6",
+                            "#ec4899",
+                            "#06b6d4"
+                        ],
+
+                        borderWidth: 2,
+                        borderColor: "#ffffff",
+                        hoverOffset: 10
+
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "65%",
+
+                plugins: {
+
+                    legend: {
+                        display: true,
+                        position: "bottom"
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function (context) {
+
+                                const index = context.dataIndex;
+
+                                const revenue = Number(context.parsed);
+
+                                const transactions = paymentTransactions[index];
+
+                                const share = totalRevenue > 0
+                                    ? (revenue / totalRevenue) * 100
+                                    : 0;
+
+                                return [
+
+                                    context.label,
+
+                                    "Revenue: ৳" + revenue.toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    }),
+
+                                    "Transactions: " + transactions,
+
+                                    "Revenue Share: " + share.toFixed(2) + "%"
+
+                                ];
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    // =====================================
+    // TOP 5 SELLING PRODUCTS
+    // HORIZONTAL BAR CHART
+    // =====================================
+
+    const productCanvas = document.getElementById("topProductsChart");
+
+    if (productCanvas) {
+
+        const productLabels = <?= json_encode(
+            $productLabels,
+            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+        ) ?>;
+
+        const productRevenue = <?= json_encode($productRevenue) ?>;
+
+        const productQuantity = <?= json_encode($productQuantity) ?>;
+
+        const productProfit = <?= json_encode($productProfit) ?>;
+
+
+        new Chart(productCanvas, {
+
+            type: "bar",
+
+            data: {
+
+                labels: productLabels,
+
+                datasets: [
+
+                    {
+
+                        label: "Revenue",
+
+                        data: productRevenue,
+
+                        backgroundColor: [
+                            "#2563eb",
+                            "#16a34a",
+                            "#f59e0b",
+                            "#8b5cf6",
+                            "#ec4899"
+                        ],
+
+                        borderRadius: 8,
+
+                        borderSkipped: false
+
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                indexAxis: "y",
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function (context) {
+
+                                const index = context.dataIndex;
+
+                                const revenue = Number(context.parsed.x);
+
+                                const quantity = productQuantity[index];
+
+                                const profit = productProfit[index];
+
+
+                                return [
+
+                                    "Revenue: ৳" + revenue.toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    }),
+
+                                    "Quantity Sold: " + quantity.toFixed(2),
+
+                                    "Profit: ৳" + profit.toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    })
+
+                                ];
+
+                            }
+
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    x: {
+
+                        beginAtZero: true,
+
+                        title: {
+
+                            display: true,
+
+                            text: "Revenue (BDT)"
+
+                        },
+
+                        ticks: {
+
+                            callback: function (value) {
+
+                                return "৳" + Number(value).toLocaleString("en-US");
+
+                            }
+
+                        }
+
+                    },
+
+                    y: {
+
+                        title: {
+
+                            display: true,
+
+                            text: "Products"
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    // =====================================
+    // CITY-WISE SALES BAR CHART
+    // =====================================
+
+    const cityCanvas = document.getElementById("citySalesChart");
+
+    if (cityCanvas) {
+
+        const cityLabels = <?= json_encode(
+            $cityLabels,
+            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+        ) ?>;
+
+        const cityRevenue = <?= json_encode($cityRevenue) ?>;
+
+        const cityQuantity = <?= json_encode($cityQuantity) ?>;
+
+        const cityProfit = <?= json_encode($cityProfit) ?>;
+
+
+        new Chart(cityCanvas, {
+
+            type: "bar",
+
+            data: {
+
+                labels: cityLabels,
+
+                datasets: [
+
+                    {
+
+                        label: "Revenue",
+
+                        data: cityRevenue,
+
+                        backgroundColor: [
+                            "#2563eb",
+                            "#16a34a",
+                            "#f59e0b"
+                        ],
+
+                        borderRadius: 8,
+
+                        borderSkipped: false
+
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function (context) {
+
+                                const index = context.dataIndex;
+
+                                const revenue = Number(context.parsed.y);
+
+                                const quantity = cityQuantity[index];
+
+                                const profit = cityProfit[index];
+
+
+                                return [
+
+                                    "Revenue: ৳" + revenue.toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    }),
+
+                                    "Quantity Sold: " + quantity.toFixed(2),
+
+                                    "Profit: ৳" + profit.toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    })
+
+                                ];
+
+                            }
+
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        title: {
+
+                            display: true,
+
+                            text: "Revenue (BDT)"
+
+                        },
+
+                        ticks: {
+
+                            callback: function (value) {
+
+                                return "৳" + Number(value).toLocaleString("en-US");
+
+                            }
+
+                        }
+
+                    },
+
+                    x: {
+
+                        title: {
+
+                            display: true,
+
+                            text: "City"
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    // =====================================
+    // REVENUE VS COST VS PROFIT CHART
+    // =====================================
+
+    const financialCanvas = document.getElementById("revenueCostProfitChart");
+
+    if (financialCanvas) {
+
+        const financialMonthLabels = <?= json_encode(
+            $financialMonthLabels,
+            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+        ) ?>;
+
+        const financialRevenue = <?= json_encode($financialRevenue) ?>;
+
+        const financialCost = <?= json_encode($financialCost) ?>;
+
+        const financialProfit = <?= json_encode($financialProfit) ?>;
+
+
+        new Chart(financialCanvas, {
+
+            type: "bar",
+
+            data: {
+
+                labels: financialMonthLabels,
+
+                datasets: [
+
+                    {
+
+                        label: "Revenue",
+
+                        data: financialRevenue,
+
+                        backgroundColor: "#2563eb",
+
+                        borderRadius: 6,
+
+                        borderSkipped: false
+
+                    },
+
+                    {
+
+                        label: "Cost",
+
+                        data: financialCost,
+
+                        backgroundColor: "#f59e0b",
+
+                        borderRadius: 6,
+
+                        borderSkipped: false
+
+                    },
+
+                    {
+
+                        label: "Profit",
+
+                        data: financialProfit,
+
+                        backgroundColor: "#16a34a",
+
+                        borderRadius: 6,
+
+                        borderSkipped: false
+
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                interaction: {
+
+                    mode: "index",
+
+                    intersect: false
+
+                },
+
+                plugins: {
+
+                    legend: {
+
+                        display: true,
+
+                        position: "top"
+
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function (context) {
+
+                                return context.dataset.label + ": ৳" +
+
+                                    Number(context.parsed.y).toLocaleString("en-US", {
+
+                                        minimumFractionDigits: 2,
+
+                                        maximumFractionDigits: 2
+
+                                    });
+
+                            }
+
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        title: {
+
+                            display: true,
+
+                            text: "Amount (BDT)"
+
+                        },
+
+                        ticks: {
+
+                            callback: function (value) {
+
+                                return "৳" + Number(value).toLocaleString("en-US");
+
+                            }
+
+                        }
+
+                    },
+
+                    x: {
+
+                        title: {
+
+                            display: true,
+
+                            text: "Month"
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+});
+
+</script>
+
+<?php endif; ?>
